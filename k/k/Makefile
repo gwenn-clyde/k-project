@@ -31,6 +31,7 @@ OBJS	= \
 	  list.o \
 	  memory.o \
 	  write.o \
+	  gdt.o \
 
 
 DEPS = $(OBJS:.o=.d)
