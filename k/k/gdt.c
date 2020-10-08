@@ -47,3 +47,4 @@ void load_cr0_segment_selector_and_cs()
     "   lret\n"
     "   1:\n"
     );
+}
