@@ -1,36 +1,60 @@
+#include <k/kstd.h>
+#include <string.h>
+#include "multiboot.h"
+#include "io.h"
+
 #include "gdt.h"
 
-struct gdt_entry gdt_table[5];
-struct gdt_register gdtr;
+struct gdt_r gdtr;
+struct gdt_entry gdt[5];
 
-void gdt_set(struct gdt_entry *gdt, u32 base, u32 limit,
-    u8 type_s_dpl_p, u8 avl_l_db_g)
+
+
+// Set the value of one GDT entry
+
+void init_gdt( u32 base, u32 limite, u8 access, u8 gran, struct gdt_entry *p)
 {
-    gdt->limit_15 = limit & 0xffff;
-    gdt->base_address_15 = base & 0xffff;
-    gdt->base_address_7 = (base & 0xff0000) >> 16;
-    gdt->type_s_dpl_p = type_s_dpl_p;
-    gdt->limit_3 = (limit & 0xf0000) >> 16;
-    gdt->avl_l_db_g = avl_l_db_g;
-    gdt->base_address = (base & 0xff000000) >> 24;
+    /* Setup the descriptor base access */
+
+     p->base0_15 = (base & 0xffff);
+     p->base16_23 = (base & 0xff0000) >> 16;
+     p->base24_31 = (base & 0xff000000) >> 24;
+
+    /* Setup the descriptor limits */
+
+     p->lim0_15 = (limite & 0xffff);
+
+    /* Finally, set up the granularity and access flags */
+
+     p->granularity = (limite & 0xff0000) >> 16;
+     p->granularity |= (gran & 0xf0);
+     p->access = access;
+
 }
 
-void gdt_init()
+
+
+//Initialise the global descriptor table.
+
+void load(void)
 {
-    memset(gdt_table, 0x0, 5);
-    gdt_set(&gdt_table[1], BASE, 0xfffff, TYPE_S_DPL_P_CODE, AVL_L_DB_G);
-    gdt_set(&gdt_table[2], BASE, 0xfffff, TYPE_S_DPL_P_DATA, AVL_L_DB_G);
+  memset(gdt,0x0,5);
+  init_gdt(0x0, 0x0, 0x0, 0x0, &gdt[0]);      /* Null segment*/
+  init_gdt(0x0, 0xfffff, 0x9b, 0x0d, &gdt[1]); /* kernel code */
+  init_gdt(0x0, 0xfffff, 0x93, 0x0d, &gdt[2]); /* kernel data */
+  init_gdt(0x0, 0xfffff, 0xff, 0x0d, &gdt[3]);    /* user code */
+  init_gdt(0x0, 0xfffff, 0xF3, 0x0d, &gdt[4]);   /* user data */
 
-    gdtr.base_address = (u32)gdt_table;
-    gdtr.limit = sizeof(gdt_table) - 1;
+  gdtr.base = (u32)&gdt;
+  gdtr.limit = sizeof(gdt) - 1;
 
-        asm volatile("lgdt %0\n"
-        : /* no output */
-        : "m" (gdtr)
-        : "memory");
+    asm volatile("lgdt %0\n"
+    : /* no output */
+    : "m" (gdtr)
+    : "memory");
 }
 
-void load_cr0_segment_selector_and_cs()
+void load_cr0_seg_and_cs()
 {
     __asm__(
     "   movl %cr0, %eax\n"

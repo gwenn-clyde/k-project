@@ -1,35 +1,22 @@
 #ifndef GDT_H
 #define GDT_H
-#include <stddef.h>
-#include <string.h>
-#include <k/kstd.h>
 
-#define TYPE_S_DPL_P_CODE 0x9b //1001 1010
-#define TYPE_S_DPL_P_DATA 0x93 //1001 0011
-#define AVL_L_DB_G 0xdf //1100 1111
-#define ON 0x01
-#define OFF 0x00
-#define BASE 0x0
+struct gdt_entry{
 
-struct gdt_entry
-{
-    u16 limit_15;
-    u8 limit_3 : 4;
-    u16 base_address_15;
-    u8 base_address_7;
-    u8 base_address;
-    u8 type_s_dpl_p;
-    u8 avl_l_db_g : 4;
+    u16 lim0_15;
+    u16 base0_15;
+    u8  base16_23;
+    u8  access;
+    u8  granularity;
+    u8  base24_31;
 }__attribute__((packed));
 
-struct gdt_register
-{
+
+struct gdt_r{
     u16 limit;
-    u32 base_address;
+    u32 base;
 }__attribute__((packed));
 
-void gdt_init();
-
-void load_cr0_segment_selector_and_cs();
-
+void load(void);
+void load_cr0_seg_and_cs();
 #endif
