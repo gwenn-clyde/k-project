@@ -33,6 +33,7 @@ void k_main(unsigned long magic, multiboot_info_t *info)
     init_serial();
     load();
     load_cr0_seg_and_cs();
+
     printf("toto IS cute\n");
     (void)magic;
     (void)info;
@@ -46,6 +47,7 @@ void k_main(unsigned long magic, multiboot_info_t *info)
 
 	for (;;)
 		asm volatile ("hlt");
+
 
 
 }

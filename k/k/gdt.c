@@ -12,23 +12,25 @@ struct gdt_entry gdt[5];
 
 // Set the value of one GDT entry
 
-void init_gdt( u32 base, u32 limite, u8 access, u8 gran, struct gdt_entry *p)
+void init_gdt( u32 base, u32 limite, u8 A_AVL_DB_G, u8 gran_type, s32 index)
 {
-    /* Setup the descriptor base access */
-
-     p->base0_15 = (base & 0xffff);
-     p->base16_23 = (base & 0xff0000) >> 16;
-     p->base24_31 = (base & 0xff000000) >> 24;
-
     /* Setup the descriptor limits */
 
-     p->lim0_15 = (limite & 0xffff);
+     gdt[index].lim0_15 = (limite & 0xffff);
+     gdt[index].base0_15 = (base & 0xffff);
+     gdt[index].base16_23 = (base & 0xff0000) >> 16;
+     gdt[index].granularity_type = (gran_type & 0xf0);
+     gdt[index].lim16_19 = (limite & 0xf00000) >> 16; 
+     gdt[index].A_AVL_DB_G = A_AVL_DB_G; 
+
+    /* Setup the descriptor base access */
+     gdt[index].base24_31 = (base & 0xff000000) >> 24;
 
     /* Finally, set up the granularity and access flags */
 
-     p->granularity = (limite & 0xff0000) >> 16;
-     p->granularity |= (gran & 0xf0);
-     p->access = access;
+
+
+
 
 }
 
@@ -39,11 +41,11 @@ void init_gdt( u32 base, u32 limite, u8 access, u8 gran, struct gdt_entry *p)
 void load(void)
 {
   memset(gdt,0x0,5);
-  init_gdt(0x0, 0x0, 0x0, 0x0, &gdt[0]);      /* Null segment*/
-  init_gdt(0x0, 0xfffff, 0x9b, 0x0d, &gdt[1]); /* kernel code */
-  init_gdt(0x0, 0xfffff, 0x93, 0x0d, &gdt[2]); /* kernel data */
-  init_gdt(0x0, 0xfffff, 0xff, 0x0d, &gdt[3]);    /* user code */
-  init_gdt(0x0, 0xfffff, 0xF3, 0x0d, &gdt[4]);   /* user data */
+  init_gdt(0x0, 0x0, 0x0, 0x0, 0);      /* Null segment*/
+  init_gdt(0x0, 0xffffffff, 0xC, 0x9A, 1); /* kernel code */
+  init_gdt(0x0, 0xffffffff, 0xC, 0x93, 2); /* kernel data */
+  //init_gdt(0x0, 0xfffff, 0xff, 0x0d, &gdt[3]);    /* user code */
+  //init_gdt(0x0, 0xfffff, 0xF3, 0x0d, &gdt[4]);   /* user data */
 
   gdtr.base = (u32)&gdt;
   gdtr.limit = sizeof(gdt) - 1;
